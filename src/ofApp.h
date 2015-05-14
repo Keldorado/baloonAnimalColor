@@ -9,48 +9,24 @@ class ofApp : public ofBaseApp{
     
 public:
     void setup();
-    void update();
     void draw();
     
-    void keyPressed  (int key);
-    void keyReleased(int key);
-    void mouseMoved(int x, int y );
-    void mouseDragged(int x, int y, int button);
-    void mousePressed(int x, int y, int button);
-    void mouseReleased(int x, int y, int button);
-    void windowResized(int w, int h);
-    void dragEvent(ofDragInfo dragInfo);
-    void gotMessage(ofMessage msg);
     
     //this is our model we'll draw
     ofxAssimpModelLoader model;
     
+     //for our light
     ofLight light;
     
-    //we added these functions to make it easier to switch between the two methods of drawing
+    //draws our model and our mesh
     void drawWithModel();
     void drawWithMesh();
     
-    
-
-        
-        void circleResolutionChanged(int & circleResolution);
-        void ringButtonPressed();
-        
         bool bHide;
-        
-        ofxFloatSlider radius;
-        ofxColorSlider color;
-        ofxVec2Slider center;
-        ofxIntSlider circleResolution;
-        ofxToggle filled;
-        ofxButton twoCircles;
-        ofxButton ringButton;
-        ofxLabel screenSize;
-        
-        ofxPanel gui;
-        
-        ofSoundPlayer ring;
+    
+    
+        ofxColorSlider color; //color slider variable
+        ofxPanel gui; //allows us to use the GUI
     
 
 };

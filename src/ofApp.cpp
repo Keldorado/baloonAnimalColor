@@ -16,11 +16,14 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    /*
-    ofSetFrameRate(60);
-    ofSetVerticalSync(true);
-    ofBackground(50, 50, 50, 0);
-     */
+    
+    ofSetFrameRate(60); //caps the frame rate
+    ofSetVerticalSync(true); //"syncs the refresh-rate with your video-cards refresh-rate, thus fast moving stuff will be looking more akkurate" (from the documentation  --> just wanted to show you that I did my research :] )
+    ofBackground(50, 50, 50, 0); //sets the color of the background
+     
+    
+    gui.setup(); //sets up the gui
+    gui.add(color.setup("color",ofColor(100,100,140),ofColor(0,0),ofColor(255,255))); //sliders for the color
     
     //we need to call this for textures to work on models
     ofDisableArbTex();
@@ -29,118 +32,55 @@ void ofApp::setup(){
     ofEnableDepthTest();
     
     //now we load our model
-    model.loadModel("dog/dog.3ds");
-    model.setPosition(ofGetWidth()*.5, ofGetHeight() * 0.75, 0);
+    model.loadModel("dog/dog.3ds"); //our model
+    model.setPosition(ofGetWidth()*.5, ofGetHeight() * 0.75, 0); //sets the position of the model
     
     light.enable();
-    light.setAmbientColor(ofColor(0));
-    light.setDiffuseColor(ofColor(100));
-    light.setSpecularColor(ofColor(100));
-    
-    gui.setup(); // most of the time you don't need a name
-    gui.add(filled.setup("fill", true));
-    gui.add(radius.setup( "radius", 140, 10, 300 ));
-    gui.add(center.setup("center",ofVec2f(ofGetWidth()*.5,ofGetHeight()*.5),ofVec2f(0,0),ofVec2f(ofGetWidth(),ofGetHeight())));
-    gui.add(color.setup("color",ofColor(100,100,140),ofColor(0,0),ofColor(255,255)));
-    gui.add(circleResolution.setup("circle res", 5, 3, 90));
-    gui.add(twoCircles.setup("two circles"));
-    gui.add(ringButton.setup("ring"));
-    gui.add(screenSize.setup("screen size", ""));
-    
-    bHide = true;
-    
-    ring.loadSound("ring.wav");
-}
-
-//--------------------------------------------------------------
-void ofApp::update(){
+    light.setAmbientColor(ofColor(100)); //sets the color of the model
+    light.setDiffuseColor(ofColor(100)); //sets the light that is difusing around the model
+    light.setSpecularColor(ofColor(100)); //sets the light that is shining back directly into our eyes
     
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    ofSetColor(255, 255, 255, 255);
+    light.enable(); //enables light
+    ofEnableDepthTest(); //this function prevents the back of the model from shinning through the front
+    drawWithMesh(); //draws the mesh
+    ofDisableDepthTest(); //turns off the depth test
+    light.disable(); //turns off the light
+    ofSetColor(255); //sets the color of the text in the GUI
+    gui.draw(); //draws the gui
+    ofSetColor(color); //sets the color
     
-    //first let's just draw the model with the model object
-    //drawWithModel();
-    
-    //then we'll learn how to draw it manually so that we have more control over the data
-    drawWithMesh();
-    
-    ofBackgroundGradient(ofColor::white, ofColor::gray);
-    
-    if( filled ){
-        ofFill();
-    }else{
-        ofNoFill();
-    }
-    
-    ofSetColor(color);
-    if(twoCircles){
-        ofCircle(center->x-radius*.5, center->y, radius );
-        ofCircle(center->x+radius*.5, center->y, radius );
-    }else{
-        ofCircle((ofVec2f)center, radius );
-    }
-    
-    // auto draw?
-    // should the gui control hiding?
-    if( bHide ){
-        gui.draw();
-    }
 }
 
-//draw the model the built-in way
-void ofApp::drawWithModel(){
-    
-    //get the position of the model
-    ofVec3f position = model.getPosition();
-    
-    //save the current view
-    ofPushMatrix();
-    
-    //center ourselves there
-    ofTranslate(position);
-    ofRotate(-ofGetMouseX(), 0, 1, 0);
-    ofRotate(90,1,0,0);
-    ofTranslate(-position);
-    
-    //draw the model
-    model.drawFaces();
-    
-    //restore the view position
-    ofPopMatrix();
-}
-
-//draw the model manually
 void ofApp::drawWithMesh(){
     
     //get the model attributes we need
-    ofVec3f scale = model.getScale();
-    ofVec3f position = model.getPosition();
-    float normalizedScale = model.getNormalizedScale();
-    ofVboMesh mesh = model.getMesh(0);
-    ofTexture texture;
-    ofxAssimpMeshHelper& meshHelper = model.getMeshHelper( 0 );
-    bool bHasTexture = meshHelper.hasTexture();
+    ofVec3f scale = model.getScale(); //gets the scale of the model
+    ofVec3f position = model.getPosition(); //gets the position of the model
+    float normalizedScale = model.getNormalizedScale(); //Normalizes the scale
+    ofVboMesh mesh = model.getMesh(0); //gets the mesh
+    ofTexture texture; //variabel for the texture
+    ofxAssimpMeshHelper& meshHelper = model.getMeshHelper( 0 ); //gets the mesh helper
+    bool bHasTexture = meshHelper.hasTexture(); //boolean to provide the model with texture
     if( bHasTexture ) {
-        texture = model.getTextureForMesh(0);
+        texture = model.getTextureForMesh(0); //applies the texture
     }
     
-    ofMaterial material = model.getMaterialForMesh(0);
+    ofMaterial material = model.getMaterialForMesh(0); //gets the material for the mesh
     
-    ofPushMatrix();
+    ofPushMatrix(); //pushes the martrix
     
     //translate and scale based on the positioning.
     ofTranslate(position);
-    ofRotate(-ofGetMouseX(), 0, 1, 0);
+    ofRotate(-ofGetMouseX()*4, 0, 1, 0);
     ofRotate(90,1,0,0);
-    
-    
     ofScale(normalizedScale, normalizedScale, normalizedScale);
     ofScale(scale.x,scale.y,scale.z);
     
-    //modify mesh with some noise
+    //modifies the mesh with some noise
     float liquidness = 5;
     float amplitude = mouseY/100.0;
     float speedDampen = 5;
@@ -153,57 +93,12 @@ void ofApp::drawWithMesh(){
     
     //draw the model manually
     if(bHasTexture) texture.bind();
-    material.begin();
-    //mesh.drawWireframe(); //you can draw wireframe too
-    mesh.drawFaces();
-    material.end();
-    if(bHasTexture) texture.unbind();
+    material.begin(); //begins the matiral
+    mesh.drawWireframe(); //adds wire frame
+    mesh.drawFaces(); //draws the faces
+    material.end(); //stops drawing the matiral
+    if(bHasTexture) texture.unbind(); //unbinds the texture
     
-    ofPopMatrix();
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::keyPressed(int key){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
-    
-}
-
-//--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){ 
+    ofPopMatrix(); //pops the matrix
     
 }
